@@ -34,7 +34,7 @@ input,select{width:100%;border:1px solid var(--line);background:#fff;border-radi
 <p class="count" id="err" style="color:#b42318"></p></div>
 <div class="wrap" id="app" style="display:none">
 <h1>트리니원 전월세</h1>
-<p class="sub">매물을 누르면 그 매물 가격 그래프가 열립니다. 네이버 링크는 그래프 아래 버튼입니다.</p>
+<p class="sub">매물을 누르면 그 매물 가격 그래프가 열립니다. 아래 버튼이 실제 네이버 매물입니다.</p>
 <div class="grid"><div class="stat"><span>전체</span><b id="nAll"></b></div><div class="stat"><span>30 / 40</span><b id="n3040"></b></div></div>
 <div class="tabs"><button id="tChange">변동만</button><button class="on" id="tAll">전체</button></div>
 <div class="sticky"><div class="controls">
@@ -71,7 +71,8 @@ function card(x,open){
   let head='<div class="now">'+esc(x.price)+'</div><div class="id">환산 '+esc(x.eqLow)+'</div>';
   if(c.kind==='down') head='<div class="banner down">이 매물 내림<br><div class="was">'+esc(c.first.p)+'</div><div class="now">'+esc(x.price)+'</div><div>'+fmtDiff(c.diff)+'</div></div>';
   if(c.kind==='up') head='<div class="banner up">이 매물 오름<br><div class="was">'+esc(c.first.p)+'</div><div class="now">'+esc(x.price)+'</div><div>'+fmtDiff(c.diff)+'</div></div>';
-  return '<article class="card'+(open?' open':'')+'" data-id="'+esc(x.id)+'"><div class="head"><div>'+head+'</div><span class="tag '+(x.trade==='전세'?'jeonse':'monthly')+'">'+esc(x.trade)+'</span></div><div class="meta">'+esc(x.cat)+'평대 '+esc(x.supply)+'/'+esc(x.exclusive)+'㎡ · '+esc(x.dong)+'동 · '+esc(x.floor)+' · '+esc(x.dir)+'</div><div class="id">'+esc(x.id)+' · 눌러서 이 매물 그래프</div><div class="detail"><div class="meta">이 매물 가격 추이</div>'+spark(x.hist)+'<a class="btn" href="'+esc(x.link)+'" target="_blank" rel="noopener">네이버에서 이 매물 보기</a></div></article>';
+  const btn=x.articleNo?'네이버에서 이 매물 보기':'네이버 단지 목록 보기';
+  return '<article class="card'+(open?' open':'')+'" data-id="'+esc(x.id)+'"><div class="head"><div>'+head+'</div><span class="tag '+(x.trade==='전세'?'jeonse':'monthly')+'">'+esc(x.trade)+'</span></div><div class="meta">'+esc(x.cat)+'평대 '+esc(x.supply)+'/'+esc(x.exclusive)+'㎡ · '+esc(x.dong)+'동 · '+esc(x.floor)+' · '+esc(x.dir)+'</div><div class="id">'+esc(x.id)+' · 눌러서 이 매물 그래프</div><div class="detail"><div class="meta">이 매물 가격 추이</div>'+spark(x.hist)+'<a class="btn" href="'+esc(x.link)+'" target="_blank" rel="noopener">'+btn+'</a></div></article>';
 }
 let DATA=[], tab='all', openId=null;
 function render(){
