@@ -1,71 +1,79 @@
-<!DOCTYPE html>
-<html lang="ko"><head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="theme-color" content="#f4f1ea"/>
-<title>보드</title>
-<style>
-:root{--bg:#f4f1ea;--card:#fffdf8;--ink:#1c1914;--muted:#6b645b;--line:#e6dfd3;--pad:max(16px,env(safe-area-inset-left))}
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>보드</title><style>
+:root{--bg:#f3efe6;--card:#fffdf8;--ink:#1c1914;--muted:#6b645b;--line:#e6dfd3;--down:#157a4b;--up:#b42318;--new:#175cd3;--gone:#667085;--pad:max(16px,env(safe-area-inset-left))}
 *{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);padding-bottom:env(safe-area-inset-bottom)}
-.gate{max-width:420px;margin:16vh 16px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
-.wrap{display:none;max-width:1280px;margin:0 auto;padding:16px var(--pad) 88px}
-input,select,button{font:inherit;border-radius:12px;padding:14px 12px;border:1px solid var(--line);width:100%;font-size:16px}
-button{background:#1c1914;color:#fff;border:0}
-.err{color:#b42318;min-height:20px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-@media(min-width:800px){.grid{grid-template-columns:repeat(4,1fr)}}
+body{margin:0;font-family:-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+.wrap{max-width:720px;margin:0 auto;padding:16px var(--pad) 40px}
+h1{font-size:22px;margin:0 0 6px;line-height:1.25}
+.sub{color:var(--muted);font-size:13px;line-height:1.45;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
-.stat b{display:block;font-size:20px;margin-top:4px}
-.sticky{position:sticky;top:0;z-index:5;background:rgba(244,241,234,.94);backdrop-filter:blur(10px);padding:8px 0}
+.stat span{color:var(--muted);font-size:11px}.stat b{display:block;margin-top:4px;font-size:20px}
+.tabs{display:flex;gap:8px;margin:0 0 10px}
+.tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:999px;padding:12px;font-size:15px}
+.tabs button.on{background:#1c1914;color:#fff;border-color:#1c1914}
+.sticky{position:sticky;top:0;z-index:5;background:rgba(243,239,230,.96);backdrop-filter:blur(10px);padding:8px 0 10px}
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .controls input{grid-column:1/-1}
-.cards{display:flex;flex-direction:column;gap:10px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
-.top{display:flex;justify-content:space-between;gap:8px}
-.price{font-size:18px;font-weight:800}
-.eq,.id,.sub,.count{color:var(--muted);font-size:12px}
+input,select{width:100%;border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;font-size:16px}
+.count{margin:8px 0 0;color:var(--muted);font-size:12px}
+.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 10px;text-decoration:none;color:inherit}
+.banner{border-radius:10px;padding:10px 12px;margin:0 0 10px;font-weight:800;font-size:15px}
+.banner.down{background:#e7f6ee;color:var(--down)}
+.banner.up{background:#fdecea;color:var(--up)}
+.banner.new{background:#eff6ff;color:var(--new)}
+.banner.gone{background:#f2f4f7;color:var(--gone)}
+.was{color:var(--muted);text-decoration:line-through;font-size:13px}
+.now{font-size:22px;font-weight:800;letter-spacing:-.03em}
+.delta{font-size:14px;font-weight:700;margin-top:2px}
+.top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .tag{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
 .jeonse{background:#eef2ff;color:#3730a3}.monthly{background:#fff6e8;color:#b54708}
-.desk{display:none}
-@media(min-width:900px){
-  .cards{display:none}
-  .desk{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:72vh}
-  .controls{display:flex}
-  input,select{width:auto}
-}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th,td{padding:7px 6px;border-top:1px solid var(--line);text-align:left}
-th{position:sticky;top:0;background:#f8f4ec}
+.meta,.id{font-size:13px;line-height:1.45}.id{color:var(--muted);font-size:11px;margin-top:8px}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:16px;padding:16px;color:var(--muted);line-height:1.55}
+.demo{opacity:.95}
 </style></head><body>
-<div class="gate" id="gate">
-<h2>보드</h2>
+<div class="wrap" id="gate">
+<h1>보드</h1>
 <p class="sub">비밀번호를 입력하세요.</p>
 <input id="pw" type="password" placeholder="비밀번호"/>
-<button id="go" style="margin-top:10px">열기</button>
-<p class="err" id="err"></p>
+<button id="go" style="margin-top:10px;background:#1c1914;color:#fff;border:0;width:100%;border-radius:12px;padding:14px;font-size:16px">열기</button>
+<p class="count" id="err" style="color:#b42318"></p>
 </div>
-<div class="wrap" id="app">
-<h1>전월세 보드</h1>
-<p class="sub" id="asof"></p>
+<div class="wrap" id="app" style="display:none">
+<h1>트리니원 전월세</h1>
+<p class="sub">변동은 카드 맨 위 큰 글씨로 이전 가격 → 현재 가격. 카드를 누르면 네이버로 이동합니다.</p>
 <div class="grid">
-<div class="stat"><span class="sub">전체</span><b id="nAll"></b></div>
-<div class="stat"><span class="sub">30평대</span><b id="n30"></b></div>
-<div class="stat"><span class="sub">40평대</span><b id="n40"></b></div>
-<div class="stat"><span class="sub">전세 / 월세</span><b id="nTrade"></b></div>
+<div class="stat"><span>전체</span><b id="nAll"></b></div>
+<div class="stat"><span>30 / 40</span><b id="n3040"></b></div>
+<div class="stat"><span>내림</span><b id="nDown">0</b></div>
+<div class="stat"><span>오름</span><b id="nUp">0</b></div>
 </div>
-<div class="sticky">
-<div class="controls">
+<div class="tabs"><button class="on" id="tChange">변동만</button><button id="tAll">전체</button></div>
+<div class="sticky"><div class="controls">
 <input id="q" placeholder="동, 가격, ID 검색"/>
 <select id="cat"><option value="">전체 평형</option><option value="30">30평대</option><option value="40">40평대</option></select>
 <select id="trade"><option value="">전체 거래</option><option value="전세">전세</option><option value="월세">월세</option></select>
-</div>
-<p class="count" id="count"></p>
-</div>
-<div class="cards" id="cards"></div>
-<div class="desk"><table><thead><tr><th>순위</th><th>ID</th><th>집</th><th>거래</th><th>가격</th><th>환산하한</th><th>전세환산</th><th>면적</th><th>동</th><th>층</th><th>방향</th><th>중개</th><th>확인</th></tr></thead><tbody id="body"></tbody></table></div>
+</div><p class="count" id="count"></p></div>
+<div id="list"></div>
 </div>
 <script>
+
+function banner(x){
+  if(x.status==='PRICE DOWN') return '<div class="banner down">가격 내림<br><span class="was">'+esc(x.prevPrice||'')+'</span><div class="now">'+esc(x.price)+'</div><div class="delta">'+(x.delta||'')+'</div></div>';
+  if(x.status==='PRICE UP') return '<div class="banner up">가격 오름<br><span class="was">'+esc(x.prevPrice||'')+'</span><div class="now">'+esc(x.price)+'</div><div class="delta">'+(x.delta||'')+'</div></div>';
+  if(x.status==='NEW') return '<div class="banner new">신규</div>';
+  if(x.status==='REMOVED') return '<div class="banner gone">사라짐</div>';
+  if(x.status==='CHANGED') return '<div class="banner new">조건 변경</div>';
+  return '';
+}
+function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
+function card(x){
+  return '<a class="card" href="'+esc(x.link)+'" target="_blank" rel="noopener"><div class="top"><div>'+banner(x)+'<div class="now">'+esc(x.price)+'</div><div class="id">환산 '+esc(x.eqLow)+'</div></div><span class="tag '+(x.trade==='전세'?'jeonse':'monthly')+'">'+esc(x.trade)+'</span></div><div class="meta">'+esc(x.cat)+'평대 '+esc(x.supply)+'/'+esc(x.exclusive)+'㎡ · '+esc(x.dong)+'동 · '+esc(x.floor)+' · '+esc(x.dir)+'</div><div class="id">#'+esc(x.rank)+' · '+esc(x.id)+' · 네이버에서 보기</div></a>';
+}
+
+let DATA=[], tab='change';
 async function unlock(pw, buf){
   const bin=new Uint8Array(buf);
   const salt=bin.slice(0,16), iv=bin.slice(16,28), tag=bin.slice(28,44), data=bin.slice(44);
@@ -75,37 +83,43 @@ async function unlock(pw, buf){
   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, enc);
   return JSON.parse(new TextDecoder().decode(pt));
 }
-let DATA=[];
 function render(){
   const q=document.getElementById('q').value.trim().toLowerCase();
   const cat=document.getElementById('cat').value;
   const trade=document.getElementById('trade').value;
-  const filtered=DATA.filter(x=>{
+  let filtered=DATA.filter(x=>{
+    if(tab==='change' && !['PRICE DOWN','PRICE UP','REMOVED','CHANGED','RETURNED'].includes(x.status) && !(x.status==='NEW' && x.prevPrice)) return false;
     if(cat && x.cat!==cat) return false;
     if(trade && x.trade!==trade) return false;
     if(!q) return true;
-    return [x.id,x.house,x.trade,x.price,x.eq,x.eqLow,x.supply,x.dong,x.floor,x.dir].join(' ').toLowerCase().includes(q);
+    return [x.id,x.house,x.trade,x.price,x.eq,x.dong,x.floor].join(' ').toLowerCase().includes(q);
   });
-  document.getElementById('count').textContent='보이는 매물 '+filtered.length.toLocaleString()+'건 / 전체 '+DATA.length.toLocaleString()+'건';
-  document.getElementById('cards').innerHTML=filtered.map(x=>'<article class="card"><div class="top"><div><div class="price">'+x.price+'</div><div class="eq">환산 '+x.eqLow+'</div></div><span class="tag '+(x.trade==='전세'?'jeonse':'monthly')+'">'+x.trade+'</span></div><div>'+x.cat+'평대 '+x.supply+'/'+x.exclusive+'㎡ · '+x.dong+'동 · '+x.floor+' · '+x.dir+'</div><div class="id">#'+x.rank+' · '+x.id+' · 중개 '+x.agency+' · '+x.date+'</div></article>').join('');
-  document.getElementById('body').innerHTML=filtered.map(x=>'<tr><td>'+x.rank+'</td><td>'+x.id+'</td><td>'+x.house+'</td><td>'+x.trade+'</td><td>'+x.price+'</td><td>'+x.eqLow+'</td><td>'+x.eq+'</td><td>'+x.supply+'/'+x.exclusive+'㎡</td><td>'+x.dong+'동</td><td>'+x.floor+'</td><td>'+x.dir+'</td><td>'+x.agency+'</td><td>'+x.date+'</td></tr>').join('');
+  const el=document.getElementById('list');
+  if(tab==='change' && filtered.length===0){
+    document.getElementById('count').textContent='오늘 변동 0건';
+    el.innerHTML='<div class="empty">내일 오전 9시부터 변동 카드가 여기 쌓입니다. 내린 집은 초록, 오른 집은 빨강입니다.</div>'
+      + '<div class="card demo"><div class="banner down">표시 예시 · 가격 내림<br><span class="was">전세 18억</span><div class="now">17억 5,000</div><div class="delta">-5,000만원</div></div><div class="meta">30평대 · 동/층/방향</div></div>'
+      + '<div class="card demo"><div class="banner up">표시 예시 · 가격 오름<br><span class="was">월세 10억 / 300</span><div class="now">10억 / 350</div><div class="delta">환산 +1.25억</div></div></div>';
+    return;
+  }
+  document.getElementById('count').textContent='보이는 매물 '+filtered.length.toLocaleString()+'건';
+  el.innerHTML=filtered.map(card).join('');
 }
 document.getElementById('go').onclick=async()=>{
-  document.getElementById('err').textContent='';
   try{
     const res=await fetch('data.bin?t='+Date.now());
-    if(!res.ok) throw new Error('data');
-    const buf=await res.arrayBuffer();
-    DATA=await unlock(document.getElementById('pw').value, buf);
+    DATA=await unlock(document.getElementById('pw').value, await res.arrayBuffer());
     document.getElementById('gate').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('nAll').textContent=DATA.length.toLocaleString();
-    document.getElementById('n30').textContent=DATA.filter(x=>x.cat==='30').length;
-    document.getElementById('n40').textContent=DATA.filter(x=>x.cat==='40').length;
-    document.getElementById('nTrade').textContent=DATA.filter(x=>x.trade==='전세').length+' / '+DATA.filter(x=>x.trade==='월세').length;
+    document.getElementById('n3040').textContent=DATA.filter(x=>x.cat==='30').length+' / '+DATA.filter(x=>x.cat==='40').length;
+    document.getElementById('nDown').textContent=DATA.filter(x=>x.status==='PRICE DOWN').length;
+    document.getElementById('nUp').textContent=DATA.filter(x=>x.status==='PRICE UP').length;
     ['q','cat','trade'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+    document.getElementById('tChange').onclick=()=>{tab='change';document.getElementById('tChange').className='on';document.getElementById('tAll').className='';render();};
+    document.getElementById('tAll').onclick=()=>{tab='all';document.getElementById('tAll').className='on';document.getElementById('tChange').className='';render();};
     render();
-  }catch(e){document.getElementById('err').textContent='비밀번호가 다르거나 데이터를 못 읽었습니다.';}
+  }catch(e){document.getElementById('err').textContent='비밀번호가 다릅니다.';}
 };
 document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('go').click();});
 </script></body></html>
