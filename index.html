@@ -2,13 +2,12 @@
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
 .wrap{max-width:720px;margin:0 auto;padding:16px var(--pad) 56px}
 h1{font-size:22px;margin:0 0 6px}.sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 12px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
 .stat span{color:var(--muted);font-size:11px}.stat b{display:block;margin-top:4px;font-size:20px}
-.period,.tabs{display:flex;gap:8px;margin:0 0 10px}
-.period button,.tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 8px;font-size:14px}
-.period button.on,.tabs button.on{background:#1c1914;color:#fff;border-color:#1c1914}
+.tabs{display:flex;gap:8px;margin:0 0 10px}
+.tabs button{flex:1;border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 8px;font-size:14px}
+.tabs button.on{background:#1c1914;color:#fff;border-color:#1c1914}
 .sticky{position:sticky;top:0;z-index:5;background:rgba(243,239,230,.96);backdrop-filter:blur(10px);padding:8px 0}
 .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .controls input{grid-column:1/-1}
@@ -23,7 +22,7 @@ input,select{width:100%;border:1px solid var(--line);background:#fff;border-radi
 .meta{font-size:13px;margin-top:6px}.id{color:var(--muted);font-size:11px;margin-top:6px}
 .detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .card.open .detail{display:block}
-.btn{display:block;width:100%;margin-top:10px;background:#1c1914;color:#fff;text-align:center;text-decoration:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700}
+.btn{display:block;width:100%;margin-top:10px;background:#1c1914;color:#fff;text-align:center;text-decoration:none;border:0;border-radius:12px;padding:13px;font-size:15px;font-weight:700}
 .banner{border-radius:10px;padding:10px 12px;margin:0 0 8px;font-weight:800}
 .down{background:#e7f6ee;color:var(--down)}.up{background:#fdecea;color:var(--up)}
 .was{text-decoration:line-through;opacity:.7;font-size:13px}
@@ -35,10 +34,8 @@ input,select{width:100%;border:1px solid var(--line);background:#fff;border-radi
 <p class="count" id="err" style="color:#b42318"></p></div>
 <div class="wrap" id="app" style="display:none">
 <h1>트리니원 전월세</h1>
-<p class="sub">매물을 누르면 그 매물 그래프가 열립니다. 네이버 링크는 아래 버튼입니다.</p>
-<div class="panel" id="allGraph"></div>
+<p class="sub">매물을 누르면 그 매물 가격 그래프가 열립니다. 네이버 링크는 그래프 아래 버튼입니다.</p>
 <div class="grid"><div class="stat"><span>전체</span><b id="nAll"></b></div><div class="stat"><span>30 / 40</span><b id="n3040"></b></div></div>
-<div class="period"><button data-p="1d">어제</button><button data-p="7d" class="on">7일</button><button data-p="all">전체</button></div>
 <div class="tabs"><button id="tChange">변동만</button><button class="on" id="tAll">전체</button></div>
 <div class="sticky"><div class="controls">
 <input id="q" placeholder="동, 가격, ID 검색"/>
@@ -50,8 +47,13 @@ input,select{width:100%;border:1px solid var(--line);background:#fff;border-radi
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 function eok(m){if(m==null||!isFinite(m))return ''; const e=m/10000; const t=Number.isInteger(e)?String(e):e.toFixed(2).replace(/0+$/,'').replace(/\.$/,''); return t+'억';}
 function fmtDiff(m){if(!m)return '변동 없음'; return (m<0?'':'+')+eok(m);}
-function pickBase(hist, period){ if(!hist||hist.length<2) return null; if(period==='all') return hist[0]; if(period==='1d') return hist[hist.length-2]; const last=new Date(hist[hist.length-1].d+'T00:00:00'); const cut=new Date(last); cut.setDate(cut.getDate()-7); let base=hist[0]; for(const h of hist){ if(new Date(h.d+'T00:00:00')<=cut) base=h; } return base; }
-function changeOf(x,period){ const hist=x.hist||[]; const last=hist[hist.length-1]; const base=pickBase(hist,period); if(!base||!last) return {kind:'none'}; const diff=(last.m||0)-(base.m||0); return {kind:diff<0?'down':diff>0?'up':'flat',last,base,diff}; }
+function changeOf(x){
+  const hist=x.hist||[];
+  if(hist.length<2) return {kind:'none'};
+  const first=hist[0], last=hist[hist.length-1];
+  const diff=(last.m||0)-(first.m||0);
+  return {kind:diff<0?'down':diff>0?'up':'flat',first,last,diff};
+}
 function spark(hist){
   const w=600,h=120,p=22;
   const pts=(hist||[]).filter(v=>v.m>0&&v.m<9e8);
@@ -64,31 +66,20 @@ function spark(hist){
   const first=pts[0], last=pts[pts.length-1];
   return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="120"><path d="'+d+'" fill="none" stroke="#1c1914" stroke-width="2.5"/>'+dots+'</svg><div class="hint">'+esc(first.d)+' '+esc(first.p)+' → '+esc(last.d)+' '+esc(last.p)+' ('+fmtDiff((last.m||0)-(first.m||0))+')</div>';
 }
-function card(x,period,open){
-  const c=changeOf(x,period);
+function card(x,open){
+  const c=changeOf(x);
   let head='<div class="now">'+esc(x.price)+'</div><div class="id">환산 '+esc(x.eqLow)+'</div>';
-  if(c.kind==='down') head='<div class="banner down">이 매물 내림<br><div class="was">'+esc(c.base.p)+'</div><div class="now">'+esc(x.price)+'</div><div>'+fmtDiff(c.diff)+'</div></div>';
-  if(c.kind==='up') head='<div class="banner up">이 매물 오름<br><div class="was">'+esc(c.base.p)+'</div><div class="now">'+esc(x.price)+'</div><div>'+fmtDiff(c.diff)+'</div></div>';
+  if(c.kind==='down') head='<div class="banner down">이 매물 내림<br><div class="was">'+esc(c.first.p)+'</div><div class="now">'+esc(x.price)+'</div><div>'+fmtDiff(c.diff)+'</div></div>';
+  if(c.kind==='up') head='<div class="banner up">이 매물 오름<br><div class="was">'+esc(c.first.p)+'</div><div class="now">'+esc(x.price)+'</div><div>'+fmtDiff(c.diff)+'</div></div>';
   return '<article class="card'+(open?' open':'')+'" data-id="'+esc(x.id)+'"><div class="head"><div>'+head+'</div><span class="tag '+(x.trade==='전세'?'jeonse':'monthly')+'">'+esc(x.trade)+'</span></div><div class="meta">'+esc(x.cat)+'평대 '+esc(x.supply)+'/'+esc(x.exclusive)+'㎡ · '+esc(x.dong)+'동 · '+esc(x.floor)+' · '+esc(x.dir)+'</div><div class="id">'+esc(x.id)+' · 눌러서 이 매물 그래프</div><div class="detail"><div class="meta">이 매물 가격 추이</div>'+spark(x.hist)+'<a class="btn" href="'+esc(x.link)+'" target="_blank" rel="noopener">네이버에서 이 매물 보기</a></div></article>';
 }
-let DATA=[], SERIES=[], tab='all', period='7d', openId=null;
-function drawAll(series){
-  const w=640,h=160,p=26; const pts=series||[];
-  if(!pts.length){document.getElementById('allGraph').innerHTML='그래프 없음';return;}
-  const vals=pts.flatMap(s=>[s.m30,s.m40].filter(Boolean)); const min=Math.min(...vals)*0.95, max=Math.max(...vals)*1.05;
-  const x=i=>p+(pts.length===1?(w-2*p)/2:i*(w-2*p)/Math.max(1,pts.length-1));
-  const y=v=>h-p-((v-min)/(max-min||1))*(h-2*p);
-  const line=k=>pts.map((s,i)=>(i?'L':'M')+x(i)+','+y(s[k]||min)).join(' ');
-  document.getElementById('allGraph').innerHTML='<div class="meta">전체 중앙값</div><svg viewBox="0 0 '+w+' '+h+'" width="100%" height="160"><path d="'+line('m30')+'" fill="none" stroke="#175cd3" stroke-width="2.5"/><path d="'+line('m40')+'" fill="none" stroke="#b54708" stroke-width="2.5"/>'+
-    pts.map((s,i)=>'<circle cx="'+x(i)+'" cy="'+y(s.m30)+'" r="4" fill="#175cd3"/><circle cx="'+x(i)+'" cy="'+y(s.m40)+'" r="4" fill="#b54708"/><text x="'+x(i)+'" y="'+(h-6)+'" text-anchor="middle" font-size="10" fill="#6b645b">'+s.d.slice(5)+'</text>').join('')+'</svg>';
-}
+let DATA=[], tab='all', openId=null;
 function render(){
-  document.querySelectorAll('.period button').forEach(b=>b.classList.toggle('on', b.dataset.p===period));
   const q=document.getElementById('q').value.trim().toLowerCase();
   const cat=document.getElementById('cat').value; const trade=document.getElementById('trade').value;
-  const filtered=DATA.filter(x=>{ const c=changeOf(x,period); if(tab==='change' && c.kind!=='down' && c.kind!=='up') return false; if(cat&&x.cat!==cat) return false; if(trade&&x.trade!==trade) return false; if(!q) return true; return [x.id,x.price,x.dong,x.floor,x.supply].join(' ').toLowerCase().includes(q); });
+  const filtered=DATA.filter(x=>{ const c=changeOf(x); if(tab==='change' && c.kind!=='down' && c.kind!=='up') return false; if(cat&&x.cat!==cat) return false; if(trade&&x.trade!==trade) return false; if(!q) return true; return [x.id,x.price,x.dong,x.floor,x.supply].join(' ').toLowerCase().includes(q); });
   document.getElementById('count').textContent='보이는 매물 '+filtered.length.toLocaleString()+'건';
-  document.getElementById('list').innerHTML=filtered.length?filtered.map(x=>card(x,period,x.id===openId)).join(''):'<div class="empty">이 기간 변동이 아직 없습니다.</div>';
+  document.getElementById('list').innerHTML=filtered.length?filtered.map(x=>card(x,x.id===openId)).join(''):'<div class="empty">아직 가격이 바뀐 매물이 없습니다. 매일 쌓이면 여기에 나옵니다.</div>';
   document.querySelectorAll('.card').forEach(el=>el.addEventListener('click',e=>{ if(e.target.closest('a')) return; openId=openId===el.dataset.id?null:el.dataset.id; render(); }));
 }
 async function unlock(pw,buf){
@@ -101,12 +92,10 @@ async function unlock(pw,buf){
 document.getElementById('go').onclick=async()=>{
   try{
     const pack=await unlock(document.getElementById('pw').value, await (await fetch('data.bin?t='+Date.now())).arrayBuffer());
-    DATA=pack.rows; SERIES=pack.series||[];
+    DATA=pack.rows;
     document.getElementById('gate').style.display='none'; document.getElementById('app').style.display='block';
     document.getElementById('nAll').textContent=DATA.length.toLocaleString();
     document.getElementById('n3040').textContent=DATA.filter(x=>x.cat==='30').length+' / '+DATA.filter(x=>x.cat==='40').length;
-    drawAll(SERIES);
-    document.querySelectorAll('.period button').forEach(b=>b.onclick=()=>{period=b.dataset.p;render();});
     document.getElementById('tChange').onclick=()=>{tab='change';document.getElementById('tChange').className='on';document.getElementById('tAll').className='';render();};
     document.getElementById('tAll').onclick=()=>{tab='all';document.getElementById('tAll').className='on';document.getElementById('tChange').className='';render();};
     ['q','cat','trade'].forEach(id=>document.getElementById(id).addEventListener('input',render));
