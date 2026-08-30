@@ -47,16 +47,9 @@ input,select{width:100%;border:1px solid var(--line);background:#fff;border-radi
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 function eok(m){if(m==null||!isFinite(m))return ''; const e=m/10000; const t=Number.isInteger(e)?String(e):e.toFixed(2).replace(/0+$/,'').replace(/\.$/,''); return t+'억';}
 function fmtDiff(m){if(!m)return '변동 없음'; return (m<0?'':'+')+eok(m);}
-function changeOf(x){
-  const hist=x.hist||[];
-  if(hist.length<2) return {kind:'none'};
-  const first=hist[0], last=hist[hist.length-1];
-  const diff=(last.m||0)-(first.m||0);
-  return {kind:diff<0?'down':diff>0?'up':'flat',first,last,diff};
-}
+function changeOf(x){ const hist=x.hist||[]; if(hist.length<2) return {kind:'none'}; const first=hist[0], last=hist[hist.length-1]; const diff=(last.m||0)-(first.m||0); return {kind:diff<0?'down':diff>0?'up':'flat',first,last,diff}; }
 function spark(hist){
-  const w=600,h=120,p=22;
-  const pts=(hist||[]).filter(v=>v.m>0&&v.m<9e8);
+  const w=600,h=120,p=22; const pts=(hist||[]).filter(v=>v.m>0&&v.m<9e8);
   if(!pts.length) return '<div class="empty">이 매물 가격 기록이 없습니다.</div>';
   const vals=pts.map(v=>v.m); const min=Math.min(...vals)*0.97, max=Math.max(...vals)*1.03;
   const x=i=>p+(pts.length===1?(w-2*p)/2:i*(w-2*p)/Math.max(1,pts.length-1));
