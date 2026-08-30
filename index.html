@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><title>보드</title><style>:root{--bg:#f3efe6;--card:#fffdf8;--ink:#1c1914;--muted:#6b645b;--line:#e6dfd3;--down:#157a4b;--up:#b42318;--pad:max(16px,env(safe-area-inset-left))}
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><title>트리니원 전월세</title><style>:root{--bg:#f3efe6;--card:#fffdf8;--ink:#1c1914;--muted:#6b645b;--line:#e6dfd3;--down:#157a4b;--up:#b42318;--pad:max(16px,env(safe-area-inset-left))}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
 .wrap{max-width:720px;margin:0 auto;padding:16px var(--pad) 56px}
 h1{font-size:22px;margin:0 0 6px}.sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 12px}
@@ -30,21 +30,19 @@ input,select{width:100%;border:1px solid var(--line);background:#fff;border-radi
 .was{text-decoration:line-through;opacity:.7;font-size:13px}
 .empty{color:var(--muted);line-height:1.5}
 .hint{color:var(--muted);font-size:12px;margin-top:6px}</style></head><body>
-<div class="wrap" id="gate"><h1>보드</h1><p class="sub">비밀번호를 입력하세요.</p>
-<input id="pw" type="password" placeholder="비밀번호"/>
-<button id="go" class="btn" style="margin-top:10px">열기</button>
-<p class="count" id="err" style="color:#b42318"></p></div>
-<div class="wrap" id="app" style="display:none">
+<div class="wrap">
 <h1>트리니원 전월세</h1>
 <p class="sub">매물을 누르면 그 매물 가격 그래프가 열립니다. 집주인 인증 매물은 초록 뱃지가 붙습니다.</p>
-<div class="grid"><div class="stat"><span>전체</span><b id="nAll"></b></div><div class="stat"><span>30 / 40</span><b id="n3040"></b></div></div>
+<div class="panel empty" id="err"></div>
+<div class="grid"><div class="stat"><span>전체</span><b id="nAll">...</b></div><div class="stat"><span>30 / 40</span><b id="n3040">...</b></div></div>
 <div class="tabs"><button id="tChange">변동만</button><button class="on" id="tAll">전체</button></div>
 <div class="sticky"><div class="controls">
 <input id="q" placeholder="동, 가격, ID 검색"/>
 <select id="cat"><option value="">전체 평형</option><option value="30">30평대</option><option value="40">40평대</option></select>
 <select id="trade"><option value="">전체 거래</option><option value="전세">전세</option><option value="월세">월세</option></select>
 </div><p class="count" id="count"></p></div>
-<div id="list"></div></div>
+<div id="list"></div>
+</div>
 <script>
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 function eok(m){if(m==null||!isFinite(m))return ''; const e=m/10000; const t=Number.isInteger(e)?String(e):e.toFixed(2).replace(/0+$/,'').replace(/\.$/,''); return t+'억';}
@@ -79,25 +77,16 @@ function render(){
   document.getElementById('list').innerHTML=filtered.length?filtered.map(x=>card(x,x.id===openId)).join(''):'<div class="empty">아직 가격이 바뀐 매물이 없습니다. 매일 쌓이면 여기에 나옵니다.</div>';
   document.querySelectorAll('.card').forEach(el=>el.addEventListener('click',e=>{ if(e.target.closest('a')) return; openId=openId===el.dataset.id?null:el.dataset.id; render(); }));
 }
-async function unlock(pw,buf){
-  const bin=new Uint8Array(buf); const salt=bin.slice(0,16), iv=bin.slice(16,28), tag=bin.slice(28,44), data=bin.slice(44);
-  const enc=new Uint8Array(data.length+tag.length); enc.set(data); enc.set(tag,data.length);
-  const keyMat=await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-  const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'}, keyMat, {name:'AES-GCM',length:256}, false, ['decrypt']);
-  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, enc)));
-}
-document.getElementById('go').onclick=async()=>{
+(async()=>{
   try{
-    const pack=await unlock(document.getElementById('pw').value, await (await fetch('data.bin?t='+Date.now())).arrayBuffer());
-    DATA=pack.rows;
-    document.getElementById('gate').style.display='none'; document.getElementById('app').style.display='block';
+    const pack=await (await fetch('data.json?t='+Date.now())).json();
+    DATA=pack.rows||pack;
     document.getElementById('nAll').textContent=DATA.length.toLocaleString();
     document.getElementById('n3040').textContent=DATA.filter(x=>x.cat==='30').length+' / '+DATA.filter(x=>x.cat==='40').length;
     document.getElementById('tChange').onclick=()=>{tab='change';document.getElementById('tChange').className='on';document.getElementById('tAll').className='';render();};
     document.getElementById('tAll').onclick=()=>{tab='all';document.getElementById('tAll').className='on';document.getElementById('tChange').className='';render();};
     ['q','cat','trade'].forEach(id=>document.getElementById(id).addEventListener('input',render));
     render();
-  }catch(e){document.getElementById('err').textContent='비밀번호가 다릅니다.';}
-};
-document.getElementById('pw').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('go').click();});
+  }catch(e){document.getElementById('err').textContent='데이터를 불러오지 못했습니다.';}
+})();
 </script></body></html>
