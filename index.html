@@ -77,7 +77,8 @@ function render(){
   const q=document.getElementById('q').value.trim().toLowerCase();
   const cx=document.getElementById('cx').value; const cat=document.getElementById('cat').value; const trade=document.getElementById('trade').value;
   const ownerOnly=document.getElementById('ownerOnly').checked;
-  const filtered=DATA.filter(x=>{ const c=changeOf(x); if(tab==='change' && c.kind!=='down' && c.kind!=='up') return false; if(cx&&x.complex!==cx) return false; if(cat&&x.cat!==cat) return false; if(trade&&x.trade!==trade) return false; if(ownerOnly && !x.owner) return false; if(!q) return true; return [x.complexName,x.id,x.price,x.dong,x.floor,x.supply].join(' ').toLowerCase().includes(q); });
+  const sortMan=x=>{ const h=x.hist||[]; const last=h[h.length-1]; return (last&&last.m)||9e8; };
+  const filtered=DATA.filter(x=>{ const c=changeOf(x); if(tab==='change' && c.kind!=='down' && c.kind!=='up') return false; if(cx&&x.complex!==cx) return false; if(cat&&x.cat!==cat) return false; if(trade&&x.trade!==trade) return false; if(ownerOnly && !x.owner) return false; if(!q) return true; return [x.complexName,x.id,x.price,x.dong,x.floor,x.supply].join(' ').toLowerCase().includes(q); }).sort((a,b)=>sortMan(a)-sortMan(b)||String(a.id).localeCompare(String(b.id)));
   document.getElementById('count').textContent='보이는 매물 '+filtered.length.toLocaleString()+'건';
   document.getElementById('list').innerHTML=filtered.length?filtered.map(x=>card(x,x.id===openId)).join(''):'<div class="empty">해당하는 매물이 없습니다.</div>';
   document.querySelectorAll('.card').forEach(el=>el.addEventListener('click',e=>{ if(e.target.closest('a')) return; openId=openId===el.dataset.id?null:el.dataset.id; render(); }));
